@@ -4,7 +4,7 @@ from cx_Freeze import setup, Executable
 
 setup(
     name = 'Imgurbot',
-    version = "1.3",
+    version = "1.4",
     description = "Imgurbot",
     executables = [Executable("imgur.py")],
     )
