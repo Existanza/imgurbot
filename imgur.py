@@ -23,51 +23,53 @@ def random_img():
     return ''.join([random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for i in range(SIZE)])
 
 
-def open_image(tmp_path):
+def open_image(tmp_path, extension):
     '''Finds the most common colour in the picture.'''
-    t_im = Image.open(tmp_path)
-    t_im.save(path + 'tmp_v2.gif', 'GIF')
-    t_im.close()
-
-    n_im = Image.open(path + 'tmp_v2.gif')
-    size_tuple = n_im.size
-    new_l = int(size_tuple[0]/4)
-    new_u = int(size_tuple[1]/2)
-    new_r = int(3*new_l)
-    new_b = int(size_tuple[1])
-    colors = [0 for x in range(256)]
-    i = new_l
-    j = new_u
-    while i < new_r:
-        while j < new_b:
-            xy_list = [i, j]
-            pixel = n_im.getpixel(tuple(xy_list))
-            colors[pixel] += 1
-            j += 1
-        i += 1
-        j = new_u
-    most_frequent_color = [0, 0]
-    for i in range(256):
-        if colors[i] > most_frequent_color[0]:
-            most_frequent_color[1] = i
-            most_frequent_color[0] = colors[i]
-    pixel = -1
-    while pixel != most_frequent_color[1]:
-        i = random.randint(new_l, new_r)
-        j = random.randint(new_u, new_b)
-        xy_list = [i, j]
-        pixel = n_im.getpixel(tuple(xy_list))
-    most_frequent_color_tuple = (i, j)
-    rgb_im = n_im.convert('RGB')
-    rgb_tuple = rgb_im.getpixel(most_frequent_color_tuple)
-    n_im.close()
-    print(rgb_tuple)
-    r, g, b = rgb_tuple
-    rgb_im.close()
-    if ((r-5) > g and (r-5) > b and r > 175) or (2*r > g and 2*r > 3*b):
+    if extension is 'gif':
         return True
     else:
-        return False
+        t_im = Image.open(tmp_path)
+        t_im.save(path + 'tmp_v2.gif', 'GIF')
+        t_im.close()
+        n_im = Image.open(path + 'tmp_v2.gif')
+        size_tuple = n_im.size
+        new_l = int(size_tuple[0]/5*2)
+        new_u = int(size_tuple[1]/5*2)
+        new_r = int(size_tuple[0]/5*3)
+        new_b = int(size_tuple[1]/5*3)
+        colors = [0 for x in range(256)]
+        i = new_l
+        j = new_u
+        while i < new_r:
+            while j < new_b:
+                xy_list = [i, j]
+                pixel = n_im.getpixel(tuple(xy_list))
+                colors[pixel] += 1
+                j += 1
+            i += 1
+            j = new_u
+        most_frequent_color = [0, 0]
+        for i in range(256):
+            if colors[i] > most_frequent_color[0]:
+                most_frequent_color[1] = i
+                most_frequent_color[0] = colors[i]
+        pixel = -1
+        while pixel != most_frequent_color[1]:
+            i = random.randint(new_l, new_r)
+            j = random.randint(new_u, new_b)
+            xy_list = [i, j]
+            pixel = n_im.getpixel(tuple(xy_list))
+        most_frequent_color_tuple = (i, j)
+        rgb_im = n_im.convert('RGB')
+        rgb_tuple = rgb_im.getpixel(most_frequent_color_tuple)
+        n_im.close()
+        print(rgb_tuple)
+        r, g, b = rgb_tuple
+        rgb_im.close()
+        if (r-5) > g and (r-5) > b and r > 50:
+            return True
+        else:
+            return False
 
 
 def get_img(imgurl):
@@ -91,29 +93,34 @@ def get_img(imgurl):
             ft.write(raw_data)
             ft.close()
             ext = imghdr.what(tmp_path, raw_data)
-            is_nsfw = open_image(tmp_path)
+            is_nsfw = open_image(tmp_path, ext)
             if not ext:
                 ext = 'jpg'
             os.remove(path + 'tmp' + '.gif')
-            os.remove(path + 'tmp_v2' + '.gif')
-
+            if ext is not 'gif':
+                os.remove(path + 'tmp_v2' + '.gif')
             fullurl = 'http://i.imgur.com/' + imgurl + '.' + ext
-            print('\r', 'Try %d.' % a, 'Retrieved: {0}'.format(fullurl), ' saved %.2f MB, total %.2f MB' % (len(raw_data)/(1024 ** 2), t))
+            print('\r', 'Try %d.' % a, is_nsfw, 'URL: {0}'.format(fullurl), ' saved %.2f MB, total %.2f MB' % (len(raw_data)/(1024 ** 2), t))
             if is_nsfw:
-                save_path = path + 'nsfw' + '\\' + imgurl + '.' + ext
+                if ext is 'gif':
+                    save_path = path + 'gif' + '\\' + imgurl + '.' + ext
+                else:
+                    save_path = path + 'nsfw' + '\\' + imgurl + '.' + ext
             else:
                 save_path = path + imgurl + '.' + ext
             f = open(save_path, 'wb')
             f.write(raw_data)
             f.close()
         except:
-            print(' couldn\'t write to ' + path + imgurl + '.gif')
+            print(' couldn\'t write to ' + path + imgurl)
     print('\r' + 'Try ' + str(a) + '.', end='')
 
 if not os.path.exists(path):
     os.makedirs(path)
 if not os.path.exists(path + '\\' + 'nsfw' + '\\'):
     os.makedirs(path + '\\' + 'nsfw' + '\\')
+if not os.path.exists(path + '\\' + 'gif' + '\\'):
+    os.makedirs(path + '\\' + 'gif' + '\\')
 
 tmp_path = path + 'tmp' + '.gif'
 
